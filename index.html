@@ -259,6 +259,38 @@ button:focus-visible { outline:3px dashed #823251; outline-offset:4px; }
   /* This slow movement is the timing game's essential input cue. */
   .timing-target.is-moving { animation-duration:3.5s !important; animation-iteration-count:infinite !important; }
 }
+
+/* Compact phone welcome: keep the collage visible and avoid continuous repainting. */
+@media (max-width:599px) {
+  .welcome-screen { padding:82px 12px 90px; }
+  .welcome-screen > .dialog { width:min(76vw,320px); }
+  .dialog.window-frame { backdrop-filter:none; background:#fff8e9; box-shadow:4px 5px #732b6855,0 0 0 2px #bd3480; }
+  .dialog .title-bar { gap:3px; padding:4px; font-size:12px; }
+  .dialog-content { padding:12px 10px 14px; }
+  .dialog .heart-stamp { width:30px; height:28px; margin-bottom:7px; font-size:17px; }
+  .dialog .eyebrow { font-size:11px; margin-bottom:6px; }
+  .dialog h1 { font-size:clamp(23px,6.3vw,28px); line-height:1.12; margin:4px 0 9px; }
+  .dialog-note { font-size:13px; line-height:1.35; margin-bottom:12px; }
+  .dialog .answer-buttons { gap:10px; }
+  .dialog .pixel-button { min-height:44px; padding:8px; font-size:14px; }
+  .dialog .big-yes-button { font-size:12px; }
+  .dialog .status-row,.dialog .loading-bar,.dialog .tiny-caption { display:none; }
+  .welcome-cutout { animation:none; filter:none; opacity:.94; width:25vw; height:150px; }
+  .welcome-cutout-1 { left:0; top:0; }
+  .welcome-cutout-2 { right:0; top:0; }
+  .welcome-cutout-3 { left:-9px; top:25%; }
+  .welcome-cutout-4 { right:-9px; top:25%; }
+  .welcome-cutout-5 { left:-9px; top:52%; }
+  .welcome-cutout-6 { right:-9px; top:52%; }
+  .welcome-cutout-7 { left:0; bottom:4%; }
+  .welcome-cutout-8 { right:0; bottom:4%; }
+  .welcome-cutout-9 { left:38%; top:0; height:110px; width:24vw; opacity:.94; }
+  .welcome-cutout-10 { left:38%; bottom:3%; height:110px; width:24vw; opacity:.94; }
+  .welcome-blooms span,.overlay-flowers span,.floaty,.flower-garland span { animation:none; filter:none; }
+  .welcome-blooms span { opacity:.7; }
+  .welcome-footer { font-size:10px; padding-inline:12px; }
+}
+
 </style>
   </head>
   <body>
@@ -433,7 +465,7 @@ const photoAssets = JSON.parse(document.querySelector("#photo-assets").textConte
 const photoNames = Object.keys(photoAssets).filter((name) => /^photo-\d+\.jpg$/.test(name)).sort();
 const photoFiles = photoNames.map((name) => photoAssets[name]);
 document.querySelectorAll("[data-photo], [data-asset]").forEach((image) => { image.src = photoAssets[image.dataset.photo || image.dataset.asset]; });
-photoFiles.forEach((src) => { const preload = new Image(); preload.src = src; });
+const isCompactPhone = () => window.matchMedia("(max-width: 599px)").matches;
 
 const photoGallery = document.querySelector("#photo-gallery");
 photoFiles.forEach((src, index) => {
@@ -475,7 +507,7 @@ function reopenWelcomeScreen() {
   flowers.className = "overlay-flowers";
   flowers.setAttribute("aria-hidden", "true");
   const glyphs = ["🌹", "🌸", "💗", "🌷", "🌼", "💕", "🌺", "💐"];
-  for (let i = 0; i < 48; i++) {
+  for (let i = 0; i < (isCompactPhone() ? 16 : 48); i++) {
     const flower = document.createElement("span");
     flower.textContent = glyphs[i % glyphs.length];
     flower.style.left = `${(i % 8) * 13 + (i % 3)}%`;
@@ -532,7 +564,7 @@ document.addEventListener("click", (event) => {
     const originX = bounds.left + bounds.width / 2;
     const originY = bounds.top + bounds.height / 2;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const pieces = 72;
+    const pieces = isCompactPhone() ? 28 : 72;
     const glyphs = ["♥", "♡", "💖", "💕", "✦", "💗"];
 
     for (let i = 0; i < pieces; i += 1) {
@@ -552,9 +584,10 @@ document.addEventListener("click", (event) => {
       burstLayer.append(piece);
     }
 
-    photoFiles.forEach((src, index) => {
+    const burstPhotos = isCompactPhone() ? photoFiles.slice(0, 8) : photoFiles;
+    burstPhotos.forEach((src, index) => {
       const photo = document.createElement("img");
-      const angle = (Math.PI * 2 * index / photoFiles.length) + (Math.random() - 0.5) * 0.32;
+      const angle = (Math.PI * 2 * index / burstPhotos.length) + (Math.random() - 0.5) * 0.32;
       const distance = 80 + Math.random() * Math.min(window.innerWidth * 0.43, 270);
       photo.className = "burst-photo";
       photo.src = src;
@@ -570,9 +603,10 @@ document.addEventListener("click", (event) => {
     });
 
     const flowers = ["🌹", "🌸", "🌼", "🌷", "🌺", "💐", "🌻", "💮"];
-    for (let i = 0; i < 42; i += 1) {
+    const flowerCount = isCompactPhone() ? 16 : 42;
+    for (let i = 0; i < flowerCount; i += 1) {
       const flower = document.createElement("span");
-      const angle = (Math.PI * 2 * i / 42) + (Math.random() - 0.5) * 0.5;
+      const angle = (Math.PI * 2 * i / flowerCount) + (Math.random() - 0.5) * 0.5;
       const distance = 70 + Math.random() * Math.min(Math.max(window.innerWidth, window.innerHeight) * 0.48, 360);
       flower.className = "burst-flower";
       flower.textContent = flowers[Math.floor(Math.random() * flowers.length)];
